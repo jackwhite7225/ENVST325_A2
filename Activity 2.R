@@ -20,6 +20,7 @@ floods$dateF <- ymd_hm(floods$datetime, tz="America/New_York")
 as.factor(floods$names)
 levels(floods$names)
 
+floods$dateF <- ymd_hm(floods$datetime, tz="America/New_York")
 #Prompt 3
 
 earlier = floods %>%
@@ -68,27 +69,68 @@ hist(fisheating_creek$gheight.ft, breaks = 20, col = 15,
      ylab = 'Frequency', axes = T)
 
 
+#Group 1: select
+
+VariableA = select(floods, names, gheight.ft, datetime)
+
+VariableB = select(floods, gheight.ft:dateF)
+
+VariableC = select(floods, -datetime, -siteID)
+
+VariableD = select(floods, gheight.ft:dateF, -moderate.ft)
+
+VariableE = select(floods, contains("e"), -agency)
+
+VariableF = select(floods,(!(gheight.ft:dateF)))
+
+#Group 2: mutate
+
+Floods_Mutated = mutate(floods,
+                        stage_meters = gheight.ft * 0.3048,
+                        percent_flood = (gheight.ft / major.ft) * 100)
+
+floods_dont_keep = mutate(floods, .keep = c('unused'),
+                          stage_meters = gheight.ft * 0.3048,
+                          percent_flood = (gheight.ft / major.ft) * 100)
+
+floods_removed = mutate(floods, percent_flood = (gheight.ft / major.ft) * 100,
+                        gheight.ft = NULL)
+
+#Group 3: ifelse
+
+floods$RiverLocation = ifelse(floods$names == "SANTA FE RIVER NEAR FORT WHITE",
+                                  "Northern Florida", "Central Florida")
+
+floods$RiverLocation = ifelse(floods$names == "SANTA FE RIVER NEAR FORT WHITE",
+                              1, 0)
+
+floods$RiverLocationNA = ifelse(floods$names == "SANTA FE RIVER NEAR FORT WHITE",
+                                NA, 'Not missing')
+
+floods$RiverLocationBool = ifelse(floods$names == "SANTA FE RIVER NEAR FORT WHITE",
+                                  T, F)
+
 
 #Homework 2 
 
-#Prompt 1
+#Question 1
 
 peace_river = floods[floods$names == "PEACE RIVER AT US 17 AT ZOLFO SPRINGS",]
 coochee_river = floods[floods$names == " WITHLACOOCHEE RIVER AT US 301 AT TRILBY",]
 
 par(mfrow = c(2, 2))
-hist(fisheating_creek$gheight.ft, breaks = 20, col = 15, 
-     main = "Fisheating Creek Stream Gauge Heights", xlab = "Stream Gauge Height",
-     ylab = 'Frequency', axes = T)
-hist(sante_fe_river$gheight.ft, breaks = 20, col = 10, 
-     main = "Sante Fe River Stream Gauge Heights", xlab = "Stream Gauge Height",
-     ylab = 'Frequency', axes = T)
-hist(peace_river$gheight.ft, breaks = 20, col = 8, 
-     main = "Peace River Stream Gauge Heights", xlab = "Stream Gauge Height",
-     ylab = 'Frequency', axes = T)
-hist(coochee_river$gheight.ft, breaks = 20, col = 5, 
-     main = "Withlacoochee River Stream Gauge Heights", xlab = "Stream Gauge Height",
-     ylab = 'Frequency', axes = T)
+plot(fisheating_creek$dateF, fisheating_creek$gheight.ft, col = 15,
+     main = "Fisheating Creek Stream Gauge Heights", xlab = "Date",
+     ylab = 'Stream Gauge Height')
+plot(sante_fe_river$dateF, sante_fe_river$gheight.ft, col = 10,
+     main = "Sante Fe River Stream Gauge Heights", xlab = "Date",
+     ylab = 'Stream Gauge Height')
+plot(peace_river$dateF, peace_river$gheight.ft, col = 8,
+     main = "Peace River Stream Gauge Heights", xlab = "Date",
+     ylab = 'Stream Gauge Height')
+plot(coochee_river$dateF, coochee_river$gheight.ft, col = 10,
+     main = "Coochee River Stream Gauge Heights", xlab = "Date",
+     ylab = 'Stream Gauge Height')
 
 #Question 2
 
@@ -118,5 +160,8 @@ major_height
 
 #Question 3
 
-
+difference_in_height = floods %>%
+  group_by(names) %>%
+  summarise(max_diff = max(gheight.ft - major.ft))
+difference_in_height
 
